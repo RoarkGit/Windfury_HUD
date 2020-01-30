@@ -1,4 +1,4 @@
-## Interface: 1131
+## Interface: 11303
 ## Title: Windfury HUD
 ## Notes: Allows party members to see each other's current Windfury status.
 ## Author: Rork-Herod
