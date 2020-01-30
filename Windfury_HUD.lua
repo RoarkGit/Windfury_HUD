@@ -20,7 +20,7 @@ Windfury_HUD.DefaultOptions = {
 }
 Windfury_HUD.IconNormal = {1, 1, 1, 1}
 Windfury_HUD.IconRed = {1, 0, 0, 1}
-Windfury_HUD.Debug = true
+Windfury_HUD.Debug = false
 Windfury_HUD.PlayerName, _ = UnitName("player")
 Windfury_HUD.Prefix = "WF_STATUS"
 Windfury_HUD.Realm = GetRealmName()
@@ -33,7 +33,7 @@ C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.Prefix)
 -- Utility functions
 
 function Windfury_HUD.SendMessage(msg)
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, "PARTY")
+    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, "SAY")
 end
 
 function Windfury_HUD.SendStatus()
@@ -117,7 +117,7 @@ end
 function Windfury_HUD.OnMessageReceive(...)
     local prefix = select(1, ...)
     local channel = select(3, ...)
-    if prefix == Windfury_HUD.Prefix and channel == "PARTY" then
+    if prefix == Windfury_HUD.Prefix then -- and channel == "PARTY" then
         local msg = select(2, ...)
         local guid, id, expire, lag1 = strsplit(":", msg)
         local name = Windfury_HUD.GUIDToName(guid)
