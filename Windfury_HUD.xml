@@ -1,0 +1,79 @@
+<Ui>
+    <Frame
+        name="Windfury_HUD_MainFrame"
+        visible="true">
+    <Anchors>
+        <Anchor point="CENTER"/>
+    </Anchors>
+        <Size>
+            <AbsDimension x="64" y="64"/>
+        </Size>
+    <Frames>
+        <Frame
+            name="Windfury_HUD_Info"
+            enableMouse="true"
+            movable="true"
+            resizable="true"
+            visible="false">
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Size>
+            <AbsDimension x="64" y="64"/>
+        </Size>
+        <ResizeBounds>
+            <minResize x="16" y="16"/>
+            <maxResize x="200" y="200"/>
+        </ResizeBounds>
+        <Backdrop bgFile="Interface\Icons\Spell_Nature_Windfury"/>
+            <Layers>
+                <Layer level="ARTWORK">
+                    <FontString
+                        name="Windfury_HUD_PlayerList"
+                        justifyV="TOP"
+                        justifyH="LEFT"
+                        outline="NORMAL"
+                        font="FONTS\FRIZQT__.ttf">
+                        <Size>
+                            <AbsDimension x="144" y="64"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOP" relativeTo="$parent" relativePoint="TOPRIGHT" x="75" y="-2"/>
+                        </Anchors>
+                        <Color r="1" g="1" b="1" a="1"/>
+                        <FontHeight val="12"/>
+                    </FontString>
+                    <FontString
+                        name="Windfury_HUD_Duration"
+                        outline="THICK"
+                        font="FONTS\FRIZQT__.ttf">
+                        <Size>
+                            <AbsDimension x="64" y="64"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="CENTER"/>
+                        </Anchors>
+                        <FontHeight val="24"/>
+                    </FontString>
+                </Layer>
+            </Layers>
+        <Scripts>
+            <OnMouseDown>
+                Windfury_HUD.OnMouseDown()
+            </OnMouseDown>
+            <OnMouseUp>
+                Windfury_HUD.OnMouseUp()
+            </OnMouseUp>
+            <OnLoad>
+                Windfury_HUD.OnLoad(self)
+            </OnLoad>
+        </Scripts>
+        </Frame>
+        </Frames>
+        <Scripts>
+            <OnUpdate>
+                Windfury_HUD.OnUpdate()
+            </OnUpdate>
+        </Scripts>
+    </Frame>
+</Ui>
