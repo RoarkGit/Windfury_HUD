@@ -33,7 +33,7 @@ C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.Prefix)
 -- Utility functions
 
 function Windfury_HUD.SendMessage(msg)
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, "SAY")
+    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, "PARTY")
 end
 
 function Windfury_HUD.SendStatus()
@@ -72,7 +72,6 @@ end
 
 function Windfury_HUD.GetIconColor()
     local time = Windfury_HUD.MinTime
-    --if Windfury_HUD.Windfury_HUD["Windfury_HUDTimerOnly"] and Windfury_HUD.WfStatus[Windfury_HUD.name] then time = max(Windfury_HUD.WfStatus[Windfury_HUD.Name] - GetTime(), 0) end
     if time == 0 then return .5, .5, .5, 1
     elseif time < 3 then
         local alpha = math.abs(.5 - math.fmod(time, 1)) + .5
@@ -117,7 +116,7 @@ end
 function Windfury_HUD.OnMessageReceive(...)
     local prefix = select(1, ...)
     local channel = select(3, ...)
-    if prefix == Windfury_HUD.Prefix then -- and channel == "PARTY" then
+    if prefix == Windfury_HUD.Prefix and channel == "PARTY" then
         local msg = select(2, ...)
         local guid, id, expire, lag1 = strsplit(":", msg)
         local name = Windfury_HUD.GUIDToName(guid)
