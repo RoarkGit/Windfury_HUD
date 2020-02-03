@@ -4,6 +4,7 @@
         toplevel="true"
         frameStrata="DIALOG"
         hidden="true"
+        movable="true"
         enableMouse="true">
         <Size>
             <AbsDimension x="300" y="250"/>
@@ -141,6 +142,12 @@
             <OnLoad>
                 Windfury_HUD.OnLoad(self)
             </OnLoad>
+            <OnMouseDown>
+                self:StartMoving()
+            </OnMouseDown>
+            <OnMouseUp>
+                self:StopMovingOrSizing()
+            </OnMouseUp>
         </Scripts>
     </Frame>
 </Ui>

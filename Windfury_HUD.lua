@@ -22,18 +22,26 @@ Windfury_HUD.IconNormal = {1, 1, 1, 1}
 Windfury_HUD.IconRed = {1, 0, 0, 1}
 Windfury_HUD.Debug = false
 Windfury_HUD.PlayerName, _ = UnitName("player")
-Windfury_HUD.Prefix = "WF_STATUS"
+Windfury_HUD.Prefix = "Windfury_HUD"
 Windfury_HUD.Realm = GetRealmName()
 Windfury_HUD.VarsLoaded = false
-Windfury_HUD.Version = "1.0"
+Windfury_HUD.Version = GetAddOnMetadata("Windfury_HUD", "Version")
+Windfury_HUD.VersionMap = {}
 Windfury_HUD.WfStatus = {}
+Windfury_HUD.WfStatusPrefix = "WF_STATUS"
+
+-- Messaging
+
+Windfury_HUD.GetVersionRequestMessage = "GET_VERSION_REQ"
+Windfury_HUD.GetVersionResponseMessage = "GET_VERSION_RESP"
 
 C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.Prefix)
+C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.WfStatusPrefix)
 
 -- Utility functions
 
-function Windfury_HUD.SendMessage(msg)
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, "PARTY")
+function Windfury_HUD.SendMessage(msg, chan)
+    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, chan)
 end
 
 function Windfury_HUD.SendStatus()
@@ -42,7 +50,16 @@ function Windfury_HUD.SendStatus()
     local guid = UnitGUID("player")
     if expire == nil then id = nil end
     local msg = guid .. ":" .. tostring(id) .. ":" .. tostring(expire) .. ":" .. lagHome
-    Windfury_HUD.SendMessage(msg)
+    C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
+end
+
+function Windfury_HUD.GetVersionRequest(chan)
+    Windfury_HUD.VersionMap = {}
+    Windfury_HUD.SendMessage(Windfury_HUD.GetVersionRequestMessage, chan)
+end
+
+function Windfury_HUD.GetVersionResponse(chan)
+    Windfury_HUD.SendMessage(Windfury_HUD.GetVersionResponseMessage .. ":" .. Windfury_HUD.Version, chan)
 end
 
 function Windfury_HUD.UpdateTimer()
@@ -82,19 +99,15 @@ end
 
 function Windfury_HUD.UpdateDuration()
     local remaining = ""
-    if Windfury_HUD.Config.ShowRemainingTime then
-        local time = Windfury_HUD.MinTime
-        if time > 0 and time < 10 then remaining = string.format("%.1fs", time) end
-    end
+    local time = Windfury_HUD.MinTime
+    if time > 0 and time < 10 then remaining = string.format("%.1fs", time) end
     Windfury_HUD_Duration:SetText(remaining)
 end
 
 function Windfury_HUD.UpdatePlayers()
     local players = ""
-    if Windfury_HUD.Config.ShowPlayerNames then
-        for p, _ in pairs(Windfury_HUD.WfStatus) do
-            players = players .. Windfury_HUD.GetColorizedPlayerName(p) .. "\n"
-        end
+    for p, _ in pairs(Windfury_HUD.WfStatus) do
+        players = players .. Windfury_HUD.GetColorizedPlayerName(p) .. "\n"
     end
     Windfury_HUD_PlayerList:SetText(players)
 end
@@ -115,9 +128,10 @@ end
 
 function Windfury_HUD.OnMessageReceive(...)
     local prefix = select(1, ...)
+    local msg = select(2, ...)
     local channel = select(3, ...)
-    if prefix == Windfury_HUD.Prefix and channel == "PARTY" then
-        local msg = select(2, ...)
+    -- Handle WF Status Messages
+    if prefix == Windfury_HUD.WfStatusPrefix and channel == "PARTY" then
         local guid, id, expire, lag1 = strsplit(":", msg)
         local name = Windfury_HUD.GUIDToName(guid)
         local _, _, lag2 = GetNetStats()
@@ -128,7 +142,21 @@ function Windfury_HUD.OnMessageReceive(...)
         if Windfury_HUD.Debug then
             print(name .. ": " .. msg)
         end
-        if id == "564" then Windfury_HUD.WfStatus[name] =  GetTime() + 10 - totalLag end
+        if id == "564" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
+        else Windfury_HUD.WfStatus[name] = nil
+        end
+    -- Handle Windfury HUD Messages
+    elseif prefix == Windfury_HUD.Prefix then
+        local cmd, payload = strsplit(":", msg, 2)
+        if cmd == Windfury_HUD.GetVersionRequestMessage then
+            Windfury_HUD.GetVersionResponse(channel)
+        elseif cmd == Windfury_HUD.GetVersionResponseMessage then
+            local sender = select(4, ...)
+            if Windfury_HUD.Debug then
+                print(sender .. ":" .. payload)
+            end
+            Windfury_HUD.VersionMap[sender] = payload
+        end
     end
 end
 
@@ -151,7 +179,12 @@ end
 
 function Windfury_HUD.OnUpdate()
     Windfury_HUD.UpdateTimer()
-    if next(Windfury_HUD.WfStatus) and not Windfury_HUD.Config.HideAll and (not Windfury_HUD.Config.InCombatOnly or InCombatLockdown()) then
+    -- Main frame
+    if Windfury_HUD.Options:IsVisible() and not Windfury_HUD.Config.HideAll then
+        Windfury_HUD.Frame:Show()
+        Windfury_HUD_PlayerList:SetText("Player1\nPlayer2\nPlayer3\nPlayer4\nPlayer5")
+        Windfury_HUD_Duration:SetText("10s")
+    elseif next(Windfury_HUD.WfStatus) and not Windfury_HUD.Config.HideAll and (not Windfury_HUD.Config.InCombatOnly or InCombatLockdown()) then
         Windfury_HUD.Frame:Show()
         local r, g, b, a = Windfury_HUD.GetIconColor()
         Windfury_HUD.Frame:SetBackdropColor(r, g, b, a)
@@ -159,6 +192,20 @@ function Windfury_HUD.OnUpdate()
         Windfury_HUD.UpdatePlayers()
     else
         Windfury_HUD.Frame:Hide()
+    end
+
+    -- Player list
+    if Windfury_HUD.Config.ShowPlayerNames then
+        Windfury_HUD_PlayerList:Show()
+    else
+        Windfury_HUD_PlayerList:Hide()
+    end
+
+    -- Duration
+    if Windfury_HUD.Config.ShowRemainingTime then
+        Windfury_HUD_Duration:Show()
+    else
+        Windfury_HUD_Duration:Hide()
     end
 end
 
