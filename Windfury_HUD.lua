@@ -144,7 +144,7 @@ function Windfury_HUD.OnMessageReceive(...)
             print(name .. ": " .. msg)
         end
         if id == "564" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
-        elseif id ~= nil then Windfury_HUD.WfStatus[name] = nil
+        elseif id ~= "nil" then Windfury_HUD.WfStatus[name] = nil
         end
     -- Handle Windfury HUD Messages
     elseif prefix == Windfury_HUD.Prefix then
