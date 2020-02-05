@@ -1,10 +1,10 @@
 ## Interface: 11303
 ## Title: Windfury HUD
-## Version: 1.1.2
+## Version: 1.2
 ## Notes: Allows party members to see each other's current Windfury status.
 ## Author: Rork-Herod
 ## SavedVariables: Windfury_HUD_Config
 
 Windfury_HUD.lua
 Windfury_HUD.xml
-Windfury_HUD_Options.xml
+Windfury_HUD_Options.lua
