@@ -66,7 +66,8 @@ function Windfury_HUD.UpdateTimer()
     local minTime = 10
     local curr = GetTime()
     if Windfury_HUD.Config.SelfTimerOnly then
-        minTime = max(Windfury_HUD.WfStatus[Windfury_HUD.PlayerName] - curr, 0)
+        local selfTime = Windfury_HUD.WfStatus[Windfury_HUD.PlayerName] or 0
+        minTime = max(selfTime - curr, 0)
     else
         for p, t in pairs(Windfury_HUD.WfStatus) do
             minTime = max(min(minTime, t - curr), 0)
