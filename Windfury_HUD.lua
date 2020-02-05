@@ -50,7 +50,7 @@ function Windfury_HUD.SendStatus()
     local guid = UnitGUID("player")
     if expire == nil then id = nil end
     local msg = guid .. ":" .. tostring(id) .. ":" .. tostring(expire) .. ":" .. lagHome
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
+    C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "SAY")
 end
 
 function Windfury_HUD.GetVersionRequest(chan)
@@ -132,7 +132,7 @@ function Windfury_HUD.OnMessageReceive(...)
     local msg = select(2, ...)
     local channel = select(3, ...)
     -- Handle WF Status Messages
-    if prefix == Windfury_HUD.WfStatusPrefix and channel == "PARTY" then
+    if prefix == Windfury_HUD.WfStatusPrefix then --and channel == "PARTY" then
         local guid, id, expire, lag1 = strsplit(":", msg)
         local name = Windfury_HUD.GUIDToName(guid)
         local _, _, lag2 = GetNetStats()
@@ -185,7 +185,7 @@ function Windfury_HUD.OnUpdate()
         Windfury_HUD.Frame:Show()
         Windfury_HUD_PlayerList:SetText("Player1\nPlayer2\nPlayer3\nPlayer4\nPlayer5")
         Windfury_HUD_Duration:SetText("10s")
-    elseif next(Windfury_HUD.WfStatus) and not Windfury_HUD.Config.HideAll and (not Windfury_HUD.Config.InCombatOnly or InCombatLockdown()) then
+    elseif Windfury_HUD.Debug or (next(Windfury_HUD.WfStatus) and not Windfury_HUD.Config.HideAll and (not Windfury_HUD.Config.InCombatOnly or InCombatLockdown())) then
         Windfury_HUD.Frame:Show()
         local r, g, b, a = Windfury_HUD.GetIconColor()
         Windfury_HUD.Frame:SetBackdropColor(r, g, b, a)
@@ -242,11 +242,6 @@ function Windfury_HUD.OnLoad(self, ...)
         Windfury_HUD.Frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
         Windfury_HUD.Frame:RegisterEvent("GROUP_ROSTER_UPDATE")
         Windfury_HUD.Frame:RegisterEvent("VARIABLES_LOADED")
-    elseif self:GetName() == "Windfury_HUD_Options_Frame" then
-        Windfury_HUD.Options = self
-        self.name = "Windfury HUD"
-        self.okay = Windfury_HUD.OptionsOkay
-        InterfaceOptions_AddCategory(self)
     end
 end
 
@@ -261,16 +256,10 @@ function Windfury_HUD.OnVarsLoaded()
         Windfury_HUD_Config[Windfury_HUD.Realm][Windfury_HUD.PlayerName] = {}
     end
     Windfury_HUD.Config = Windfury_HUD_Config[Windfury_HUD.Realm][Windfury_HUD.PlayerName]
-    if not Windfury_HUD.Config.HideAll then Windfury_HUD.Config.HideAll = Windfury_HUD.DefaultOptions.HideAll end
-    if not Windfury_HUD.Config.SelfTimerOnly then Windfury_HUD.Config.SelfTimerOnly = Windfury_HUD.DefaultOptions.SelfTimerOnly end
-    if not Windfury_HUD.Config.ShowPlayerNames then Windfury_HUD.Config.ShowPlayerNames = Windfury_HUD.DefaultOptions.ShowPlayerNames end
-    if not Windfury_HUD.Config.ShowRemainingTime then Windfury_HUD.Config.ShowRemainingTime = Windfury_HUD.DefaultOptions.ShowRemainingTime end
-    if not Windfury_HUD.Config.InCombatOnly then Windfury_HUD.Config.InCombatOnly = Windfury_HUD.DefaultOptions.InCombatOnly end
-    Windfury_HUD_Options_Frame_HideAllBtn:SetChecked(Windfury_HUD.Config.HideAll)
-    Windfury_HUD_Options_Frame_SelfTimerOnlyBtn:SetChecked(Windfury_HUD.Config.SelfTimerOnly)
-    Windfury_HUD_Options_Frame_ShowPlayerNamesBtn:SetChecked(Windfury_HUD.Config.ShowPlayerNames)
-    Windfury_HUD_Options_Frame_ShowRemainingTimeBtn:SetChecked(Windfury_HUD.Config.ShowRemainingTime)
-    Windfury_HUD_Options_Frame_InCombatOnlyBtn:SetChecked(Windfury_HUD.Config.InCombatOnly)
+    for k, v in pairs(Windfury_HUD.DefaultOptions) do
+        if not Windfury_HUD.Config[k] then Windfury_HUD.Config[k] = v end
+    end
+    Windfury_HUD.Options.Init()
     Windfury_HUD.VarsLoaded = true
 end
 
