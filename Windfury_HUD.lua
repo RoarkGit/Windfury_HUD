@@ -16,7 +16,8 @@ Windfury_HUD.DefaultOptions = {
     SelfTimerOnly = false,
     ShowPlayerNames = true,
     ShowRemainingTime = true,
-    InCombatOnly = false
+    InCombatOnly = false,
+    InvertDisplay = false
 }
 Windfury_HUD.IconNormal = {1, 1, 1, 1}
 Windfury_HUD.IconRed = {1, 0, 0, 1}
@@ -50,7 +51,7 @@ function Windfury_HUD.SendStatus()
     local guid = UnitGUID("player")
     if expire == nil then id = nil end
     local msg = guid .. ":" .. tostring(id) .. ":" .. tostring(expire) .. ":" .. lagHome
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "SAY")
+    C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
 end
 
 function Windfury_HUD.GetVersionRequest(chan)
@@ -81,10 +82,10 @@ function Windfury_HUD.GUIDToName(guid)
     return name
 end
 
-function Windfury_HUD.GetColorizedPlayerName(name)
+function Windfury_HUD.GetColorizedPlayerName(name, time)
     local _, class, _ = UnitClass(name)
     local color = Windfury_HUD.ClassColors[class]
-    if GetTime() > Windfury_HUD.WfStatus[name] then color = "606060" end
+    if time > Windfury_HUD.WfStatus[name] then color = "606060" end
     return "|cFF" .. color .. name
 end
 
@@ -107,8 +108,20 @@ end
 
 function Windfury_HUD.UpdatePlayers()
     local players = ""
+    local time = GetTime()
     for p, _ in pairs(Windfury_HUD.WfStatus) do
-        players = players .. Windfury_HUD.GetColorizedPlayerName(p) .. "\n"
+        -- If player hasn't updated in over 60 seconds, don't retain their data.
+        if time > Windfury_HUD.WfStatus[p] + 60 then
+            Windfury_HUD.WfStatus[p] = nil
+        else
+            if Windfury_HUD.Config.InvertDisplay then
+                if time > Windfury_HUD.WfStatus[p] then
+                    players = players .. Windfury_HUD.GetColorizedPlayerName(p, -1) .. "\n"
+                end
+            else
+                players = players .. Windfury_HUD.GetColorizedPlayerName(p, time) .. "\n"
+            end
+        end
     end
     Windfury_HUD_PlayerList:SetText(players)
 end
@@ -132,7 +145,7 @@ function Windfury_HUD.OnMessageReceive(...)
     local msg = select(2, ...)
     local channel = select(3, ...)
     -- Handle WF Status Messages
-    if prefix == Windfury_HUD.WfStatusPrefix then --and channel == "PARTY" then
+    if prefix == Windfury_HUD.WfStatusPrefix and channel == "PARTY" then
         local guid, id, expire, lag1 = strsplit(":", msg)
         local name = Windfury_HUD.GUIDToName(guid)
         local _, _, lag2 = GetNetStats()
@@ -180,19 +193,27 @@ end
 
 function Windfury_HUD.OnUpdate()
     Windfury_HUD.UpdateTimer()
+    local combatCheck = not Windfury_HUD.Config.InCombatOnly or InCombatLockDown()
     -- Main frame
-    if Windfury_HUD.Options:IsVisible() and not Windfury_HUD.Config.HideAll then
-        Windfury_HUD.Frame:Show()
-        Windfury_HUD_PlayerList:SetText("Player1\nPlayer2\nPlayer3\nPlayer4\nPlayer5")
-        Windfury_HUD_Duration:SetText("10s")
-    elseif Windfury_HUD.Debug or (next(Windfury_HUD.WfStatus) and not Windfury_HUD.Config.HideAll and (not Windfury_HUD.Config.InCombatOnly or InCombatLockdown())) then
-        Windfury_HUD.Frame:Show()
-        local r, g, b, a = Windfury_HUD.GetIconColor()
-        Windfury_HUD.Frame:SetBackdropColor(r, g, b, a)
-        Windfury_HUD.UpdateDuration()
-        Windfury_HUD.UpdatePlayers()
-    else
+    if Windfury_HUD.Config.HideAll then
         Windfury_HUD.Frame:Hide()
+    else
+        if Windfury_HUD.Options:IsVisible() then
+            Windfury_HUD.Frame:Show()
+            Windfury_HUD_PlayerList:SetText("Player1\nPlayer2\nPlayer3\nPlayer4\nPlayer5")
+            Windfury_HUD_Duration:SetText("10s")
+        elseif Windfury_HUD.Config.InvertDisplay and combatCheck and Windfury_HUD.MinTime == 0 then
+            Windfury_HUD.Frame:Show()
+            Windfury_HUD.UpdatePlayers()
+        elseif not Windfury_HUD.Config.InvertDisplay and next(Windfury_HUD.WfStatus) and combatCheck then
+            Windfury_HUD.Frame:Show()
+            local r, g, b, a = Windfury_HUD.GetIconColor()
+            Windfury_HUD.Frame:SetBackdropColor(r, g, b, a)
+            Windfury_HUD.UpdateDuration()
+            Windfury_HUD.UpdatePlayers()
+        else
+            Windfury_HUD.Frame:Hide()
+        end
     end
 
     -- Player list
