@@ -60,7 +60,6 @@ function Windfury_HUD.Options.AddButtons()
     local count = 0
     for _, btn in pairs(Windfury_HUD.Options.ButtonConfig) do
         local key, text, tooltipText = unpack(btn)
-        print(key, text, tooltipText)
         count = count + 1
         Windfury_HUD.Options.CreateCheckButton(x, y, key, text, tooltipText)
         y = y - 30
