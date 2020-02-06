@@ -1,0 +1,4 @@
+package-as: Windfury_HUD
+
+ignore:
+    - README.md
