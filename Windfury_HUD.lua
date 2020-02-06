@@ -53,7 +53,9 @@ function Windfury_HUD.SendStatus()
     local guid = UnitGUID("player")
     if expire == nil then id = nil end
     local msg = guid .. ":" .. tostring(id) .. ":" .. tostring(expire) .. ":" .. lagHome
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
+    if not UnitInBattleground("player") then
+        C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
+    end
 end
 
 function Windfury_HUD.GetVersionRequest(chan)
