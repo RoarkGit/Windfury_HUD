@@ -42,7 +42,9 @@ C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.WfStatusPrefix)
 -- Utility functions
 
 function Windfury_HUD.SendMessage(msg, chan)
-    C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, chan)
+    if not UnitInBattleground("player") then
+        C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, chan)
+    end
 end
 
 function Windfury_HUD.SendStatus()
