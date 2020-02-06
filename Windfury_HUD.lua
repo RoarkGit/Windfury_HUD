@@ -41,9 +41,9 @@ C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.WfStatusPrefix)
 
 -- Utility functions
 
-function Windfury_HUD.SendMessage(msg, chan)
+function Windfury_HUD.SendMessage(pfx, msg, chan)
     if not UnitInBattleground("player") then
-        C_ChatInfo.SendAddonMessage(Windfury_HUD.Prefix, msg, chan)
+        C_ChatInfo.SendAddonMessage(pfx, msg, chan)
     end
 end
 
@@ -53,18 +53,16 @@ function Windfury_HUD.SendStatus()
     local guid = UnitGUID("player")
     if expire == nil then id = nil end
     local msg = guid .. ":" .. tostring(id) .. ":" .. tostring(expire) .. ":" .. lagHome
-    if not UnitInBattleground("player") then
-        C_ChatInfo.SendAddonMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
-    end
+    Windfury_HUD.SendMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
 end
 
 function Windfury_HUD.GetVersionRequest(chan)
     Windfury_HUD.VersionMap = {}
-    Windfury_HUD.SendMessage(Windfury_HUD.GetVersionRequestMessage, chan)
+    Windfury_HUD.SendMessage(Windfury_HUD.Prefix, Windfury_HUD.GetVersionRequestMessage, chan)
 end
 
 function Windfury_HUD.GetVersionResponse(chan)
-    Windfury_HUD.SendMessage(Windfury_HUD.GetVersionResponseMessage .. ":" .. Windfury_HUD.Version, chan)
+    Windfury_HUD.SendMessage(Windfury_HUD.Prefix, Windfury_HUD.GetVersionResponseMessage .. ":" .. Windfury_HUD.Version, chan)
 end
 
 function Windfury_HUD.UpdateTimer()
