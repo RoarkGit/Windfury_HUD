@@ -22,6 +22,7 @@ Windfury_HUD.DefaultOptions = {
 Windfury_HUD.IconNormal = {1, 1, 1, 1}
 Windfury_HUD.IconRed = {1, 0, 0, 1}
 Windfury_HUD.Debug = false
+Windfury_HUD.LoadingScreen = false
 Windfury_HUD.PlayerName, _ = UnitName("player")
 Windfury_HUD.Prefix = "Windfury_HUD"
 Windfury_HUD.Realm = GetRealmName()
@@ -42,7 +43,7 @@ C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.WfStatusPrefix)
 -- Utility functions
 
 function Windfury_HUD.SendMessage(pfx, msg, chan)
-    if not UnitInBattleground("player") then
+    if not Windfury_HUD.LoadingScreen and not UnitInBattleground("player") then
         C_ChatInfo.SendAddonMessage(pfx, msg, chan)
     end
 end
@@ -139,6 +140,17 @@ function Windfury_HUD.OnEvent(self, event, ...)
     elseif event == "UNIT_INVENTORY_CHANGED" then Windfury_HUD.SendStatus()
     elseif event == "GROUP_ROSTER_UPDATE" then Windfury_HUD.OnGroupUpdate()
     elseif event == "VARIABLES_LOADED" then Windfury_HUD.OnVarsLoaded()
+    elseif event == "PLAYER_ENTERING_WORLD" then Windfury_HUD.OnEnteringWorld(...)
+    elseif event == "ZONE_CHANGED_NEW_AREA" then
+        Windfury_HUD.LoadingScreen = false
+    end
+end
+
+function Windfury_HUD.OnEnteringWorld(...)
+    local isInitialLogin = select(1, ...)
+    local isReloadingUI = select(2, ...)
+    if not isInitialLogin and not isReloadingUI then
+        Windfury_HUD.LoadingScreen = true
     end
 end
 
@@ -158,7 +170,7 @@ function Windfury_HUD.OnMessageReceive(...)
         if Windfury_HUD.Debug then
             print(name .. ": " .. msg)
         end
-        if id == "564" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
+        if id == "564" or id == "563" or id == "1783" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
         elseif id ~= "nil" then Windfury_HUD.WfStatus[name] = nil
         end
     -- Handle Windfury HUD Messages
@@ -265,6 +277,8 @@ function Windfury_HUD.OnLoad(self, ...)
         Windfury_HUD.Frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
         Windfury_HUD.Frame:RegisterEvent("GROUP_ROSTER_UPDATE")
         Windfury_HUD.Frame:RegisterEvent("VARIABLES_LOADED")
+        Windfury_HUD.Frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        Windfury_HUD.Frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     end
 end
 
