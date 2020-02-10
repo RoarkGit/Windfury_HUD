@@ -207,7 +207,7 @@ end
 
 function Windfury_HUD.OnUpdate()
     Windfury_HUD.UpdateTimer()
-    local combatCheck = not Windfury_HUD.Config.InCombatOnly or InCombatLockDown()
+    local combatCheck = not Windfury_HUD.Config.InCombatOnly or InCombatLockdown()
     -- Main frame
     if Windfury_HUD.Config.HideAll then
         Windfury_HUD.Frame:Hide()
