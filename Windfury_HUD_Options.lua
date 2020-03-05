@@ -6,6 +6,7 @@ function Windfury_HUD.Options.Init()
         {"SelfTimerOnly", "Self timer only", "Only show remaining time for own Windfury buff"},
         {"ShowPlayerNames", "Show player names", nil},
         {"ShowRemainingTime", "Show remaining time", "Show remaining time on Windfury buff"},
+        {"ShowMeleeOnly", "Show melee only", "Only shows rogues and warriors on HUD."},
         {"InCombatOnly", "Show in combat only", "Only show display when in combat"},
         {"HideAll", "Hide all displays", nil},
         {"InvertDisplay", "Invert display", "Only show display when Windfury is missing on players"}

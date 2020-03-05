@@ -16,6 +16,7 @@ Windfury_HUD.DefaultOptions = {
     SelfTimerOnly = false,
     ShowPlayerNames = true,
     ShowRemainingTime = true,
+    ShowMeleeOnly = false,
     InCombatOnly = false,
     InvertDisplay = false
 }
@@ -40,10 +41,8 @@ Windfury_HUD.GetVersionResponseMessage = "GET_VERSION_RESP"
 C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.Prefix)
 C_ChatInfo.RegisterAddonMessagePrefix(Windfury_HUD.WfStatusPrefix)
 
--- Utility functions
-
 function Windfury_HUD.SendMessage(pfx, msg, chan)
-    if not Windfury_HUD.LoadingScreen and not UnitInBattleground("player") then
+    if not Windfury_HUD.LoadingScreen then
         C_ChatInfo.SendAddonMessage(pfx, msg, chan)
     end
 end
@@ -54,7 +53,11 @@ function Windfury_HUD.SendStatus()
     local guid = UnitGUID("player")
     if expire == nil then id = nil end
     local msg = guid .. ":" .. tostring(id) .. ":" .. tostring(expire) .. ":" .. lagHome
-    Windfury_HUD.SendMessage(Windfury_HUD.WfStatusPrefix, msg, "PARTY")
+    local chan = "PARTY"
+    if UnitInBattleground("player") then
+        chan = "INSTANCE_CHAT"
+    end
+    Windfury_HUD.SendMessage(Windfury_HUD.WfStatusPrefix, msg, chan)
 end
 
 function Windfury_HUD.GetVersionRequest(chan)
@@ -64,6 +67,29 @@ end
 
 function Windfury_HUD.GetVersionResponse(chan)
     Windfury_HUD.SendMessage(Windfury_HUD.Prefix, Windfury_HUD.GetVersionResponseMessage .. ":" .. Windfury_HUD.Version, chan)
+end
+
+-- Utility functions
+
+function Windfury_HUD.PlayerIsValid(name)
+    if UnitIsDeadOrGhost(name) then
+        return false
+    end
+    if Windfury_HUD.Config.ShowMeleeOnly then
+        local _, class, _ = UnitClass(name)
+        if class ~= "WARRIOR" and class ~= "ROGUE" then
+            return false
+        end
+    end
+    if UnitInRaid("player") then
+        local _, _, selfGroup = GetRaidRosterInfo(UnitInRaid("player"))
+        local _, _, playerGroup = GetRaidRosterInfo(UnitInRaid(name))
+        return selfGroup == playerGroup
+    elseif UnitInParty(name) then
+        return true
+    else
+        return false
+    end
 end
 
 function Windfury_HUD.UpdateTimer()
@@ -93,12 +119,14 @@ function Windfury_HUD.GetColorizedPlayerName(name, time)
 end
 
 function Windfury_HUD.GetIconColor()
-    local time = Windfury_HUD.MinTime
-    if time == 0 then return .5, .5, .5, 1
-    elseif time < 3 then
-        local alpha = math.abs(.5 - math.fmod(time, 1)) + .5
-        return 1, 1, 1, alpha
-    else return 1, 1, 1, 1
+    if not Windfury_HUD.Config.InvertDisplay then
+        local time = Windfury_HUD.MinTime
+        if time == 0 then return .5, .5, .5, 1
+        elseif time < 3 then
+            local alpha = math.abs(.5 - math.fmod(time, 1)) + .5
+            return 1, 1, 1, alpha
+        else return 1, 1, 1, 1
+        end
     end
 end
 
@@ -114,7 +142,7 @@ function Windfury_HUD.UpdatePlayers()
     local time = GetTime()
     for p, _ in pairs(Windfury_HUD.WfStatus) do
         -- If player hasn't updated in over 60 seconds, don't retain their data.
-        if time > Windfury_HUD.WfStatus[p] + 60 then
+        if time > Windfury_HUD.WfStatus[p] + 60 or not Windfury_HUD.PlayerIsValid(p) then
             Windfury_HUD.WfStatus[p] = nil
         else
             if Windfury_HUD.Config.InvertDisplay then
@@ -127,10 +155,6 @@ function Windfury_HUD.UpdatePlayers()
         end
     end
     Windfury_HUD_PlayerList:SetText(players)
-end
-
-function Windfury_HUD.OpenOptions()
-    InterfaceOptionsFrame_OpenToCategory(Windfury_HUD.Options)
 end
 
 -- Event Handlers
@@ -159,17 +183,17 @@ function Windfury_HUD.OnMessageReceive(...)
     local msg = select(2, ...)
     local channel = select(3, ...)
     -- Handle WF Status Messages
-    if prefix == Windfury_HUD.WfStatusPrefix and channel == "PARTY" then
+    if prefix == Windfury_HUD.WfStatusPrefix then
         local guid, id, expire, lag1 = strsplit(":", msg)
         local name = Windfury_HUD.GUIDToName(guid)
-        local _, _, lag2 = GetNetStats()
-        local totalLag = (lag1 + lag2 * 2) / 1000
-        if Windfury_HUD.Debug and Windfury_HUD.WfStatus[name] == nil then
-            print(name .. " is using WF_STATUS protocol!")
-        end
         if Windfury_HUD.Debug then
             print(name .. ": " .. msg)
         end
+        if not Windfury_HUD.PlayerIsValid(name) then
+            return
+        end
+        local _, _, lag2 = GetNetStats()
+        local totalLag = (lag1 + lag2 * 2) / 1000
         if id == "564" or id == "563" or id == "1783" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
         elseif id ~= "nil" then Windfury_HUD.WfStatus[name] = nil
         end
@@ -190,13 +214,26 @@ end
 
 function Windfury_HUD.OnGroupUpdate()
     local party = {}
-    if UnitInParty("player") then
+    if UnitInBattleground("player") then
+        local _, _, selfGroup = GetRaidRosterInfo(UnitInRaid("player"))
+        for i=1,GetNumGroupMembers() do
+            local name, _, playerGroup = GetRaidRosterInfo(i)
+            if selfGroup == playerGroup then
+                party[name] = true
+            end
+        end
+        for p, _ in pairs(Windfury_HUD.WfStatus) do
+            if party[p] == nil then
+                Windfury_HUD.WfStatus[p] = nil
+            end
+        end
+    elseif UnitInParty("player") then
         for i=1,GetNumSubgroupMembers() do
             local name, _ = UnitName("party" .. i)
             party[name] = true
         end
         for p, _ in pairs(Windfury_HUD.WfStatus) do
-            if party[p] == nil then
+            if p ~= Windfury_HUD.PlayerName and party[p] == nil then
                 Windfury_HUD.WfStatus[p] = nil
             end
         end
@@ -246,6 +283,9 @@ function Windfury_HUD.OnUpdate()
 end
 
 function Windfury_HUD.OnMouseDown()
+    if IsModifierKeyDown() then
+        Windfury_HUD.Frame:SetBackdropColor(1, 1, 1, .5)
+    end
     if IsShiftKeyDown() then
         Windfury_HUD.Frame:StartMoving()
     elseif IsAltKeyDown() then
@@ -260,6 +300,7 @@ end
 
 function Windfury_HUD.OnMouseUp()
     Windfury_HUD.Frame:StopMovingOrSizing()
+    Windfury_HUD.Frame:SetBackdropColor(1, 1, 1, 1)
     if Windfury_HUD.Resizing then
         local scale = Windfury_HUD.Frame:GetHeight() / 64
         Windfury_HUD.Frame:SetWidth(Windfury_HUD.Frame:GetHeight())
