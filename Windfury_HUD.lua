@@ -275,7 +275,7 @@ function Windfury_HUD.OnUpdate()
     end
 
     -- Duration
-    if Windfury_HUD.Config.ShowRemainingTime then
+    if Windfury_HUD.Config.ShowRemainingTime and not Windfury_HUD.Config.InvertDisplay then
         Windfury_HUD_Duration:Show()
     else
         Windfury_HUD_Duration:Hide()
