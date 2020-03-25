@@ -72,7 +72,7 @@ end
 -- Utility functions
 
 function Windfury_HUD.PlayerIsValid(name)
-    if UnitIsDeadOrGhost(name) then
+    if UnitIsDeadOrGhost(name) or not UnitIsConnected(name) then
         return false
     end
     if Windfury_HUD.Config.ShowMeleeOnly then
