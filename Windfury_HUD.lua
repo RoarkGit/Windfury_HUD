@@ -324,6 +324,10 @@ function Windfury_HUD.OnLoad(self, ...)
 end
 
 function Windfury_HUD.OnVarsLoaded()
+    if GetLocale() == "ruRU" then
+      Windfury_HUD_PlayerList:SetFont("Fonts\\FRIZQT___CYR.ttf", 12, "OUTLINE")
+      Windfury_HUD_Duration:SetFont("Fonts\\FRIZQT___CYR.ttf", 24, "THICKOUTLINE")
+    end
     if not Windfury_HUD_Config then
         Windfury_HUD_Config = {}
     end
