@@ -339,7 +339,7 @@ function Windfury_HUD.OnVarsLoaded()
     end
     Windfury_HUD.Config = Windfury_HUD_Config[Windfury_HUD.Realm][Windfury_HUD.PlayerName]
     for k, v in pairs(Windfury_HUD.DefaultOptions) do
-        if not Windfury_HUD.Config[k] then Windfury_HUD.Config[k] = v end
+        if Windfury_HUD.Config[k] == nil then Windfury_HUD.Config[k] = v end
     end
     Windfury_HUD.Options.Init()
     Windfury_HUD.VarsLoaded = true
