@@ -194,7 +194,7 @@ function Windfury_HUD.OnMessageReceive(...)
         end
         local _, _, lag2 = GetNetStats()
         local totalLag = (lag1 + lag2 * 2) / 1000
-        if id == "564" or id == "563" or id == "1783" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
+        if id == "563" or id == "564" or id == "1783" or id == "2638" or id == "2639" then Windfury_HUD.WfStatus[name] = GetTime() + 10 - totalLag
         elseif id ~= "nil" then Windfury_HUD.WfStatus[name] = nil
         end
     -- Handle Windfury HUD Messages

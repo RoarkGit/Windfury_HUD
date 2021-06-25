@@ -1,4 +1,4 @@
-Windfury_HUD.Options = CreateFrame("Frame", "Windfury_HUD_Options_Frame")
+Windfury_HUD.Options = CreateFrame("Frame", "Windfury_HUD_Options_Frame", nil, "BackdropTemplate")
 Windfury_HUD.Options:Hide()
 
 function Windfury_HUD.Options.Init()
